@@ -1,0 +1,385 @@
+{
+    "version": "7.2",
+    "data_api_version": "3.0",
+    "routing_model": {
+        "SELECT_PACKAGES": [
+            "TRAVEL_DATES"
+        ],
+        "TRAVEL_DATES": [
+            "GROUP_SIZE"
+        ],
+        "GROUP_SIZE": [
+            "REVIEW"
+        ],
+        "REVIEW": []
+    },
+    "screens": [
+        {
+            "id": "SELECT_PACKAGES",
+            "title": "Destinations",
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "Select your destination spots"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "Choose one or more South India destinations for your trip. You can pick up to 20."
+                    },
+                    {
+                        "type": "Form",
+                        "name": "packages_form",
+                        "children": [
+                            {
+                                "type": "CheckboxGroup",
+                                "name": "packages",
+                                "label": "Travel packages",
+                                "required": true,
+                                "min-selected-items": 1,
+                                "data-source": [
+                                    {
+                                        "id": "Ooty",
+                                        "title": "Ooty",
+                                        "description": "Nilgiri hills · tea gardens & toy train"
+                                    },
+                                    {
+                                        "id": "Kodaikanal",
+                                        "title": "Kodaikanal",
+                                        "description": "Princess of hills · lake & pine forests"
+                                    },
+                                    {
+                                        "id": "Munnar",
+                                        "title": "Munnar",
+                                        "description": "Tea country · misty green valleys"
+                                    },
+                                    {
+                                        "id": "Coorg",
+                                        "title": "Coorg",
+                                        "description": "Coffee estates · waterfalls & hills"
+                                    },
+                                    {
+                                        "id": "Wayanad",
+                                        "title": "Wayanad",
+                                        "description": "Wildlife · caves & bamboo forests"
+                                    },
+                                    {
+                                        "id": "Yercaud",
+                                        "title": "Yercaud",
+                                        "description": "Quiet hill town · orange groves"
+                                    },
+                                    {
+                                        "id": "Alleppey",
+                                        "title": "Alleppey",
+                                        "description": "Backwaters · houseboat cruises"
+                                    },
+                                    {
+                                        "id": "Kumarakom",
+                                        "title": "Kumarakom",
+                                        "description": "Vembanad lake · birds & backwaters"
+                                    },
+                                    {
+                                        "id": "Thekkady",
+                                        "title": "Thekkady",
+                                        "description": "Periyar reserve · spice plantations"
+                                    },
+                                    {
+                                        "id": "Kanyakumari",
+                                        "title": "Kanyakumari",
+                                        "description": "Land's end · sunrise & sunset point"
+                                    },
+                                    {
+                                        "id": "Rameswaram",
+                                        "title": "Rameswaram",
+                                        "description": "Temple town · pristine beaches"
+                                    },
+                                    {
+                                        "id": "Pondicherry",
+                                        "title": "Pondicherry",
+                                        "description": "French quarter · cafes & beaches"
+                                    },
+                                    {
+                                        "id": "Chikmagalur",
+                                        "title": "Chikmagalur",
+                                        "description": "Coffee land · Mullayanagiri peak"
+                                    },
+                                    {
+                                        "id": "Gokarna",
+                                        "title": "Gokarna",
+                                        "description": "Laid-back beaches · temple town"
+                                    },
+                                    {
+                                        "id": "Hampi",
+                                        "title": "Hampi",
+                                        "description": "Ancient ruins · boulder landscapes"
+                                    },
+                                    {
+                                        "id": "Mysore",
+                                        "title": "Mysore",
+                                        "description": "Palace city · heritage & gardens"
+                                    },
+                                    {
+                                        "id": "Kovalam",
+                                        "title": "Kovalam",
+                                        "description": "Crescent beaches · lighthouse views"
+                                    },
+                                    {
+                                        "id": "Varkala",
+                                        "title": "Varkala",
+                                        "description": "Cliff beaches · Ayurveda retreats"
+                                    },
+                                    {
+                                        "id": "Valparai",
+                                        "title": "Valparai",
+                                        "description": "Tea estates · misty mountain drives"
+                                    },
+                                    {
+                                        "id": "Vagamon",
+                                        "title": "Vagamon",
+                                        "description": "Meadows · pine valleys & paragliding"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Footer",
+                                "label": "Continue",
+                                "on-click-action": {
+                                    "name": "navigate",
+                                    "next": {
+                                        "type": "screen",
+                                        "name": "TRAVEL_DATES"
+                                    },
+                                    "payload": {
+                                        "packages": "${form.packages}"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "TRAVEL_DATES",
+            "title": "Travel dates",
+            "data": {
+                "packages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "__example__": [
+                        "Ooty",
+                        "Munnar"
+                    ]
+                }
+            },
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "When are you travelling?"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "Pick your start and end dates from the calendar."
+                    },
+                    {
+                        "type": "Form",
+                        "name": "dates_form",
+                        "children": [
+                            {
+                                "type": "DatePicker",
+                                "name": "start_date",
+                                "label": "Start date",
+                                "required": true
+                            },
+                            {
+                                "type": "DatePicker",
+                                "name": "end_date",
+                                "label": "End date",
+                                "required": true
+                            },
+                            {
+                                "type": "Footer",
+                                "label": "Continue",
+                                "on-click-action": {
+                                    "name": "navigate",
+                                    "next": {
+                                        "type": "screen",
+                                        "name": "GROUP_SIZE"
+                                    },
+                                    "payload": {
+                                        "packages": "${data.packages}",
+                                        "start_date": "${form.start_date}",
+                                        "end_date": "${form.end_date}"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "GROUP_SIZE",
+            "title": "Travellers",
+            "data": {
+                "packages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "__example__": [
+                        "Ooty",
+                        "Munnar"
+                    ]
+                },
+                "start_date": {
+                    "type": "string",
+                    "__example__": "1718409600000"
+                },
+                "end_date": {
+                    "type": "string",
+                    "__example__": "1719014400000"
+                }
+            },
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "How many are travelling?"
+                    },
+                    {
+                        "type": "Form",
+                        "name": "group_form",
+                        "children": [
+                            {
+                                "type": "TextInput",
+                                "name": "members",
+                                "label": "Total no. of members",
+                                "input-type": "text",
+                                "required": true,
+                                "helper-text": "e.g. 5"
+                            },
+                            {
+                                "type": "Footer",
+                                "label": "Continue",
+                                "on-click-action": {
+                                    "name": "navigate",
+                                    "next": {
+                                        "type": "screen",
+                                        "name": "REVIEW"
+                                    },
+                                    "payload": {
+                                        "packages": "${data.packages}",
+                                        "start_date": "${data.start_date}",
+                                        "end_date": "${data.end_date}",
+                                        "members": "${form.members}"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "REVIEW",
+            "title": "Review",
+            "terminal": true,
+            "data": {
+                "packages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "__example__": [
+                        "Ooty",
+                        "Munnar"
+                    ]
+                },
+                "start_date": {
+                    "type": "string",
+                    "__example__": "10 Jun 2024"
+                },
+                "end_date": {
+                    "type": "string",
+                    "__example__": "15 Jun 2024"
+                },
+                "members": {
+                    "type": "string",
+                    "__example__": "5"
+                }
+            },
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "Review your trip"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "Please confirm the details below before submitting your enquiry."
+                    },
+                    {
+                        "type": "TextSubheading",
+                        "text": "Destinations"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "${data.packages}"
+                    },
+                    {
+                        "type": "TextSubheading",
+                        "text": "Travel dates"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "${data.start_date}"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "to"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "${data.end_date}"
+                    },
+                    {
+                        "type": "TextSubheading",
+                        "text": "Travellers"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "${data.members}"
+                    },
+                    {
+                        "type": "Form",
+                        "name": "review_form",
+                        "children": [
+                            {
+                                "type": "Footer",
+                                "label": "Submit enquiry",
+                                "on-click-action": {
+                                    "name": "data_exchange",
+                                    "payload": {
+                                        "enquiry_type": "tour_package",
+                                        "packages_summary": "${data.packages}",
+                                        "start_date": "${data.start_date}",
+                                        "end_date": "${data.end_date}",
+                                        "members": "${data.members}"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

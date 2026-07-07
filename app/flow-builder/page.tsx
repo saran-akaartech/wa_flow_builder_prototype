@@ -14,7 +14,8 @@ const WA_GREEN = "#25D366";
 const WA_TEAL = "#075E54";
 const WA_HEADER = "#128C7E";
 
-const FLOW_VERSIONS = ["7.2", "7.1", "7.0", "6.3"];
+const FLOW_VERSION = "7.3";
+const DATA_API_VERSION = "3.0";
 
 /* ---------- component model ---------- */
 const DATA_TYPES = new Set([
@@ -134,8 +135,8 @@ function defaults(type: ComponentType): ComponentProps {
 
 /* ---------- initial flow ---------- */
 const initialFlow: Flow = {
-    version: "7.2",
-    dataApiVersion: "",
+    version: FLOW_VERSION,
+    dataApiVersion: DATA_API_VERSION,
     screens: [
         {
             uid: uid(), id: "WELCOME", title: "Welcome", terminal: false,
@@ -166,7 +167,35 @@ function richDataSourceItem(o: Option): Record<string, unknown> {
     return item;
 }
 
-function renderComponent(c: FlowComponent, screen: Screen, screens: Screen[]): Record<string, unknown> {
+type FieldDescriptor = { name: string; jsonType: "string" | "array"; example: unknown };
+
+function ownFields(screen: Screen): FieldDescriptor[] {
+    const out: FieldDescriptor[] = [];
+    screen.children.forEach((c) => {
+        if (!DATA_TYPES.has(c.type) || !c.props.name) return;
+        const p = c.props;
+        switch (c.type) {
+            case "CheckboxGroup":
+                out.push({ name: p.name!, jsonType: "array", example: (p.options ?? []).slice(0, 2).map((o) => o.title) });
+                break;
+            case "Dropdown":
+            case "RadioButtonsGroup":
+                out.push({ name: p.name!, jsonType: "string", example: p.options?.[0]?.title ?? "Option 1" });
+                break;
+            case "DatePicker":
+                out.push({ name: p.name!, jsonType: "string", example: String(Date.now()) });
+                break;
+            case "OptIn":
+                out.push({ name: p.name!, jsonType: "string", example: "true" });
+                break;
+            default:
+                out.push({ name: p.name!, jsonType: "string", example: p.label || "sample text" });
+        }
+    });
+    return out;
+}
+
+function renderComponent(c: FlowComponent, screen: Screen, screens: Screen[], inherited: FieldDescriptor[]): Record<string, unknown> {
     const p = c.props;
     switch (c.type) {
         case "TextHeading": return { type: "TextHeading", text: p.text };
@@ -200,9 +229,10 @@ function renderComponent(c: FlowComponent, screen: Screen, screens: Screen[]): R
             screen.children.forEach((ch) => {
                 if (DATA_TYPES.has(ch.type) && ch.props.name) payload[ch.props.name] = "${form." + ch.props.name + "}";
             });
+            inherited.forEach((f) => { payload[f.name] = "${data." + f.name + "}"; });
             let action;
             if (screen.terminal) {
-                action = { name: "complete", payload };
+                action = { name: "data_exchange", payload };
             } else {
                 const idx = screens.findIndex((s) => s.uid === screen.uid);
                 const fallback = screens[idx + 1]?.id || null;
@@ -218,9 +248,24 @@ function renderComponent(c: FlowComponent, screen: Screen, screens: Screen[]): R
 function buildFlowJSON(flow: Flow): Record<string, unknown> {
     const out: Record<string, unknown> = { version: flow.version };
     if (flow.dataApiVersion) out.data_api_version = flow.dataApiVersion;
-    out.screens = flow.screens.map((screen) => {
+
+    const accumulated: FieldDescriptor[][] = [];
+    const seen: Record<string, FieldDescriptor> = {};
+    flow.screens.forEach((screen, i) => {
+        accumulated[i] = Object.values(seen);
+        ownFields(screen).forEach((f) => { seen[f.name] = f; });
+    });
+
+    out.routing_model = Object.fromEntries(flow.screens.map((screen, i) => {
+        if (screen.terminal) return [screen.id, []];
+        const footer = screen.children.find((c) => c.type === "Footer");
+        const next = footer?.props.nextScreen || flow.screens[i + 1]?.id;
+        return [screen.id, next ? [next] : []];
+    }));
+
+    out.screens = flow.screens.map((screen, i) => {
         const ordered = [...screen.children.filter((c) => c.type !== "Footer"), ...screen.children.filter((c) => c.type === "Footer")];
-        const rendered = ordered.map((c) => renderComponent(c, screen, flow.screens));
+        const rendered = ordered.map((c) => renderComponent(c, screen, flow.screens, accumulated[i]));
         const needsForm = ordered.some((c) => FORM_TYPES.has(c.type));
         let children;
         if (needsForm) {
@@ -231,6 +276,12 @@ function buildFlowJSON(flow: Flow): Record<string, unknown> {
         }
         const s: Record<string, unknown> = { id: screen.id, title: screen.title };
         if (screen.terminal) s.terminal = true;
+        if (accumulated[i].length) {
+            s.data = Object.fromEntries(accumulated[i].map((f) => [
+                f.name,
+                f.jsonType === "array" ? { type: "array", items: { type: "string" }, __example__: f.example } : { type: "string", __example__: f.example },
+            ]));
+        }
         s.layout = { type: "SingleColumnLayout", children };
         return s;
     });
@@ -621,7 +672,7 @@ function PropertyEditor({ comp, screen, screens, onProps }: { comp: FlowComponen
                     <Field label="Button label"><input className={inputCls} value={p.label} onChange={(e) => set({ label: e.target.value })} /></Field>
                     {screen.terminal ? (
                         <div className="rounded-md bg-emerald-50 px-2.5 py-2 text-[12px] text-emerald-700">
-                            Terminal screen → this button completes the flow (<code>complete</code>).
+                            Terminal screen → this button submits the accumulated data (<code>data_exchange</code>).
                         </div>
                     ) : (
                         <Field label="Navigate to screen">
@@ -716,6 +767,16 @@ export default function WhatsAppFlowBuilder() {
         a.href = URL.createObjectURL(blob); a.download = "flow.json"; a.click(); URL.revokeObjectURL(a.href);
     };
     const reset = () => { setFlow(initialFlow); setCurrentUid(initialFlow.screens[0].uid); setSelUid(null); };
+    const [saveBlocked, setSaveBlocked] = useState(false);
+    const saveFlow = () => {
+        if (errors.length > 0) {
+            setSaveBlocked(true);
+            setShowJson(true);
+            setTimeout(() => setSaveBlocked(false), 2000);
+            return;
+        }
+        downloadJson();
+    };
 
     return (
         <div className="flex h-[100%] w-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-gray-100 text-gray-900" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}>
@@ -727,19 +788,20 @@ export default function WhatsAppFlowBuilder() {
                 </div>
                 <div className="mx-1 flex items-center gap-1.5 text-[12px]">
                     <span className="text-gray-500">Flow</span>
-                    <select className="rounded-md border border-gray-300 bg-white px-1.5 py-1 text-[12px]" value={flow.version} onChange={(e) => setFlow((f) => ({ ...f, version: e.target.value }))}>
-                        {FLOW_VERSIONS.map((v) => <option key={v} value={v}>{v}</option>)}
-                    </select>
+                    <span className="rounded-md border border-gray-200 bg-gray-50 px-1.5 py-1 text-[12px] font-medium text-gray-700">{flow.version}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[12px]">
                     <span className="text-gray-500">Data API</span>
-                    <input placeholder="none" className="w-20 rounded-md border border-gray-300 bg-white px-1.5 py-1 text-[12px]" value={flow.dataApiVersion} onChange={(e) => setFlow((f) => ({ ...f, dataApiVersion: e.target.value }))} />
+                    <span className="rounded-md border border-gray-200 bg-gray-50 px-1.5 py-1 text-[12px] font-medium text-gray-700">{flow.dataApiVersion}</span>
                 </div>
                 <div className="ml-auto flex items-center gap-1.5">
                     {errors.length === 0
                         ? <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[12px] font-medium text-emerald-700"><Check size={13} /> Valid{warns.length ? ` · ${warns.length} tip${warns.length > 1 ? "s" : ""}` : ""}</span>
                         : <span className="flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-[12px] font-medium text-red-600"><AlertTriangle size={13} /> {errors.length} issue{errors.length > 1 ? "s" : ""}</span>}
                     <button onClick={() => setShowJson((v) => !v)} className="flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"><FileJson2 size={13} /> JSON</button>
+                    <button onClick={saveFlow} className={`flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium text-white ${saveBlocked ? "bg-red-500" : ""}`} style={saveBlocked ? undefined : { backgroundColor: WA_TEAL }}>
+                        {saveBlocked ? <AlertTriangle size={13} /> : <Check size={13} />}{saveBlocked ? `Fix ${errors.length} error${errors.length > 1 ? "s" : ""}` : "Save"}
+                    </button>
                     <button onClick={copyJson} className="flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium text-white" style={{ backgroundColor: WA_GREEN }}>{copied ? <Check size={13} /> : <Copy size={13} />}{copied ? "Copied" : "Copy"}</button>
                     <button onClick={downloadJson} className="flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"><Download size={13} /></button>
                     <button onClick={reset} className="flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"><RotateCcw size={13} /></button>

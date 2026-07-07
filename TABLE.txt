@@ -1,0 +1,38 @@
+CREATE TABLE public."WA_Business_Flows" (
+    "Client_Id"           INTEGER,
+    "Whatsapp_Account_Id" Varchar(50),
+
+    "Flow_Id"             TEXT UNIQUE NOT NULL,
+    "Flow_Name"           TEXT NOT NULL,
+
+    "Category"            TEXT,
+
+    "Flow_JSON"           JSONB,
+
+    "JSON_Version"        TEXT,
+    "Data_API_Version"    TEXT,
+
+    "Endpoint_URL"        TEXT,
+
+    "Current_Status"      VARCHAR(30) NOT NULL DEFAULT 'DRAFT',
+
+    "Validation_Errors"   JSONB,
+
+    "Preview_URL"         TEXT,
+
+    "Is_Deleted"          BOOLEAN DEFAULT FALSE,
+    "Deleted_At"          TIMESTAMPTZ,
+
+    "Is_Cloned"           BOOLEAN DEFAULT FALSE,
+    "Clone_Source_Flow_Id" TEXT,
+    "Cloned_At"           TIMESTAMPTZ,
+
+    "Created_At"          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "Updated_At"          TIMESTAMPTZ,
+
+    "Published_At"        TIMESTAMPTZ,
+
+    "Last_Status_Change_At" TIMESTAMPTZ,
+
+    "Meta_Logs"       JSONB
+);
