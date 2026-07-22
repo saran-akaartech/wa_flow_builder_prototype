@@ -1,12 +1,17 @@
 'use client'
 
 import { useState, useMemo, useRef } from "react";
-import {
-    Plus, Trash2, ChevronUp, ChevronDown, Copy, Download, RotateCcw,
-    Check, AlertTriangle, X, FileJson2, Smartphone, PanelLeftClose,
-    Type, TextCursorInput, ListChecks, CalendarDays, CheckSquare, MousePointerClick,
-    Image as ImageIcon, Upload,
-} from "lucide-react";
+
+function Glyph({ ch, size, className }: { ch: string; size: number; className?: string }) {
+    return (
+        <span
+            className={`inline-flex items-center justify-center leading-none ${className ?? ""}`}
+            style={{ width: size, height: size, fontSize: Math.round(size * 0.9) }}
+        >
+            {ch}
+        </span>
+    );
+}
 
 
 /* ---------- brand ---------- */
@@ -42,13 +47,13 @@ const META = {
     Footer: { label: "Footer button", cat: "Action" },
 };
 
-const PALETTE: { group: string; icon: typeof Type; items: ComponentType[] }[] = [
-    { group: "Text", icon: Type, items: ["TextHeading", "TextSubheading", "TextBody", "TextCaption"] },
-    { group: "Media", icon: ImageIcon, items: ["Image"] },
-    { group: "Inputs", icon: TextCursorInput, items: ["TextInput", "TextArea", "DatePicker"] },
-    { group: "Choices", icon: ListChecks, items: ["Dropdown", "RadioButtonsGroup", "CheckboxGroup"] },
-    { group: "Consent", icon: CheckSquare, items: ["OptIn"] },
-    { group: "Action", icon: MousePointerClick, items: ["Footer"] },
+const PALETTE: { group: string; icon: string; items: ComponentType[] }[] = [
+    { group: "Text", icon: "T", items: ["TextHeading", "TextSubheading", "TextBody", "TextCaption"] },
+    { group: "Media", icon: "▧", items: ["Image"] },
+    { group: "Inputs", icon: "I", items: ["TextInput", "TextArea", "DatePicker"] },
+    { group: "Choices", icon: "☰", items: ["Dropdown", "RadioButtonsGroup", "CheckboxGroup"] },
+    { group: "Consent", icon: "☑", items: ["OptIn"] },
+    { group: "Action", icon: "➤", items: ["Footer"] },
 ];
 
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -425,7 +430,7 @@ function PreviewComponent({ c }: { c: FlowComponent }) {
                 <div>
                     <PvLabel required={p.required}>{p.label}</PvLabel>
                     <div className="flex items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-[13px] text-gray-400">
-                        <span>Select date</span><CalendarDays size={15} />
+                        <span>Select date</span><Glyph ch="📅" size={15} />
                     </div>
                 </div>
             );
@@ -434,7 +439,7 @@ function PreviewComponent({ c }: { c: FlowComponent }) {
                 <div>
                     <PvLabel required={p.required}>{p.label}</PvLabel>
                     <div className="flex items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-[13px] text-gray-400">
-                        <span>{p.options?.[0]?.title || "Select"}</span><ChevronDown size={15} />
+                        <span>{p.options?.[0]?.title || "Select"}</span><Glyph ch="▼" size={15} />
                     </div>
                 </div>
             );
@@ -480,7 +485,7 @@ function PreviewComponent({ c }: { c: FlowComponent }) {
             }
             return (
                 <div style={{ width: boxW, height: boxH }} className="flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 text-gray-400">
-                    <ImageIcon size={20} />
+                    <Glyph ch="▧" size={20} />
                     <span className="text-[11px]">{declW}×{declH} · {p.scaleType}</span>
                 </div>
             );
@@ -539,11 +544,11 @@ function OptionsEditor({ options, onChange, rich }: { options: Option[]; onChang
                 {options.map((o) => (
                     <div key={o.id} className="flex items-center gap-1.5">
                         <input className={inputCls} value={o.title} onChange={(e) => patch(o.id, { title: e.target.value })} />
-                        <button className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500" onClick={() => remove(o.id)} aria-label="Remove option"><X size={14} /></button>
+                        <button className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500" onClick={() => remove(o.id)} aria-label="Remove option"><Glyph ch="×" size={14} /></button>
                     </div>
                 ))}
                 <button className="flex items-center gap-1 text-[12px] font-medium text-emerald-600 hover:text-emerald-700" onClick={() => onChange([...options, { id: uid(), title: `Option ${options.length + 1}` }])}>
-                    <Plus size={13} /> Add option
+                    <Glyph ch="+" size={13} /> Add option
                 </button>
             </div>
         );
@@ -559,14 +564,14 @@ function OptionsEditor({ options, onChange, rich }: { options: Option[]; onChang
                             <label className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-dashed border-gray-300 text-gray-400 hover:border-emerald-400 hover:bg-emerald-50">
                                 {src
                                     ? <img src={src} alt={o.title} className="h-full w-full object-cover" />
-                                    : <Upload size={14} />}
+                                    : <Glyph ch="⬆" size={14} />}
                                 <input type="file" accept="image/jpeg,image/png" className="hidden" onChange={(e) => uploadImage(o.id, e)} />
                             </label>
                             <div className="min-w-0 flex-1 space-y-1.5">
                                 <input className={inputCls} placeholder="Title" value={o.title} onChange={(e) => patch(o.id, { title: e.target.value })} />
                                 <textarea rows={2} className={inputCls} placeholder="Description (optional)" value={o.description ?? ""} onChange={(e) => patch(o.id, { description: e.target.value })} />
                             </div>
-                            <button className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500" onClick={() => remove(o.id)} aria-label="Remove option"><X size={14} /></button>
+                            <button className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500" onClick={() => remove(o.id)} aria-label="Remove option"><Glyph ch="×" size={14} /></button>
                         </div>
                         {uploadError?.id === o.id ? <div className="text-[11px] text-red-500">{uploadError.msg}</div> : null}
                         {o.image ? (
@@ -576,7 +581,7 @@ function OptionsEditor({ options, onChange, rich }: { options: Option[]; onChang
                 );
             })}
             <button className="flex items-center gap-1 text-[12px] font-medium text-emerald-600 hover:text-emerald-700" onClick={() => onChange([...options, { id: uid(), title: `Option ${options.length + 1}` }])}>
-                <Plus size={13} /> Add option
+                <Glyph ch="+" size={13} /> Add option
             </button>
         </div>
     );
@@ -621,7 +626,7 @@ function PropertyEditor({ comp, screen, screens, onProps }: { comp: FlowComponen
                     <Field label="Image source (base64 or URL)">
                         <div className="space-y-1.5">
                             <label className="flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-2 text-[12px] text-gray-600 hover:border-emerald-400 hover:bg-emerald-50">
-                                <Upload size={13} /> Upload image
+                                <Glyph ch="⬆" size={13} /> Upload image
                                 <input type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleUpload} />
                             </label>
                             {imgError && <div className="text-[11px] text-red-500">{imgError}</div>}
@@ -783,7 +788,7 @@ export default function WhatsAppFlowBuilder() {
             {/* header */}
             <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2.5">
                 <div className="flex items-center gap-2">
-                    <span className="grid h-7 w-7 place-items-center rounded-lg text-white" style={{ backgroundColor: WA_GREEN }}><Smartphone size={16} /></span>
+                    <span className="grid h-7 w-7 place-items-center rounded-lg text-white" style={{ backgroundColor: WA_GREEN }}><Glyph ch="📱" size={16} /></span>
                     <span className="text-[14px] font-semibold">WhatsApp Flow builder</span>
                 </div>
                 <div className="mx-1 flex items-center gap-1.5 text-[12px]">
@@ -796,15 +801,15 @@ export default function WhatsAppFlowBuilder() {
                 </div>
                 <div className="ml-auto flex items-center gap-1.5">
                     {errors.length === 0
-                        ? <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[12px] font-medium text-emerald-700"><Check size={13} /> Valid{warns.length ? ` · ${warns.length} tip${warns.length > 1 ? "s" : ""}` : ""}</span>
-                        : <span className="flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-[12px] font-medium text-red-600"><AlertTriangle size={13} /> {errors.length} issue{errors.length > 1 ? "s" : ""}</span>}
-                    <button onClick={() => setShowJson((v) => !v)} className="flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"><FileJson2 size={13} /> JSON</button>
+                        ? <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[12px] font-medium text-emerald-700"><Glyph ch="✓" size={13} /> Valid{warns.length ? ` · ${warns.length} tip${warns.length > 1 ? "s" : ""}` : ""}</span>
+                        : <span className="flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-[12px] font-medium text-red-600"><Glyph ch="⚠" size={13} /> {errors.length} issue{errors.length > 1 ? "s" : ""}</span>}
+                    <button onClick={() => setShowJson((v) => !v)} className="flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"><Glyph ch="{}" size={13} /> JSON</button>
                     <button onClick={saveFlow} className={`flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium text-white ${saveBlocked ? "bg-red-500" : ""}`} style={saveBlocked ? undefined : { backgroundColor: WA_TEAL }}>
-                        {saveBlocked ? <AlertTriangle size={13} /> : <Check size={13} />}{saveBlocked ? `Fix ${errors.length} error${errors.length > 1 ? "s" : ""}` : "Save"}
+                        {saveBlocked ? <Glyph ch="⚠" size={13} /> : <Glyph ch="✓" size={13} />}{saveBlocked ? `Fix ${errors.length} error${errors.length > 1 ? "s" : ""}` : "Save"}
                     </button>
-                    <button onClick={copyJson} className="flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium text-white" style={{ backgroundColor: WA_GREEN }}>{copied ? <Check size={13} /> : <Copy size={13} />}{copied ? "Copied" : "Copy"}</button>
-                    <button onClick={downloadJson} className="flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"><Download size={13} /></button>
-                    <button onClick={reset} className="flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"><RotateCcw size={13} /></button>
+                    <button onClick={copyJson} className="flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium text-white" style={{ backgroundColor: WA_GREEN }}>{copied ? <Glyph ch="✓" size={13} /> : <Glyph ch="⧉" size={13} />}{copied ? "Copied" : "Copy"}</button>
+                    <button onClick={downloadJson} className="flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"><Glyph ch="⬇" size={13} /></button>
+                    <button onClick={reset} className="flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"><Glyph ch="↺" size={13} /></button>
                 </div>
             </div>
 
@@ -813,17 +818,17 @@ export default function WhatsAppFlowBuilder() {
                 <div className="flex w-52 shrink-0 flex-col border-r border-gray-200 bg-white">
                     <div className="flex items-center justify-between px-3 pt-3">
                         <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Screens</span>
-                        <button onClick={addScreen} className="rounded p-0.5 text-emerald-600 hover:bg-emerald-50" aria-label="Add screen"><Plus size={15} /></button>
+                        <button onClick={addScreen} className="rounded p-0.5 text-emerald-600 hover:bg-emerald-50" aria-label="Add screen"><Glyph ch="+" size={15} /></button>
                     </div>
                     <div className="space-y-1 px-2 py-2">
                         {flow.screens.map((s) => (
                             <div key={s.uid} onClick={() => { setCurrentUid(s.uid); setSelUid(null); }}
                                 className={`group flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 text-[13px] ${s.uid === currentUid ? "bg-emerald-50 text-emerald-800" : "text-gray-700 hover:bg-gray-50"}`}>
-                                <Smartphone size={13} className="shrink-0 opacity-60" />
+                                <Glyph ch="📱" size={13} className="shrink-0 opacity-60" />
                                 <span className="truncate">{s.id}</span>
                                 {s.terminal && <span className="ml-auto rounded bg-gray-200 px-1 text-[9px] font-semibold text-gray-500">END</span>}
                                 {flow.screens.length > 1 && (
-                                    <button onClick={(e) => { e.stopPropagation(); deleteScreen(s.uid); }} className="ml-auto hidden rounded p-0.5 text-gray-400 hover:text-red-500 group-hover:block" aria-label="Delete screen"><Trash2 size={12} /></button>
+                                    <button onClick={(e) => { e.stopPropagation(); deleteScreen(s.uid); }} className="ml-auto hidden rounded p-0.5 text-gray-400 hover:text-red-500 group-hover:block" aria-label="Delete screen"><Glyph ch="🗑" size={12} /></button>
                                 )}
                             </div>
                         ))}
@@ -833,13 +838,13 @@ export default function WhatsAppFlowBuilder() {
                     <div className="flex-1 space-y-3 overflow-y-auto px-2 py-2">
                         {PALETTE.map((grp) => (
                             <div key={grp.group}>
-                                <div className="mb-1 flex items-center gap-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400"><grp.icon size={11} /> {grp.group}</div>
+                                <div className="mb-1 flex items-center gap-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400"><Glyph ch={grp.icon} size={11} /> {grp.group}</div>
                                 <div className="space-y-1">
                                     {grp.items.map((t) => (
                                         <button key={t} draggable onDragStart={() => setDragType(t)} onDragEnd={() => setDragType(null)}
                                             onClick={() => addComponent(t)}
                                             className="flex w-full cursor-grab items-center justify-between rounded-md border border-gray-200 bg-white px-2 py-1.5 text-left text-[12px] text-gray-700 hover:border-emerald-400 hover:bg-emerald-50 active:cursor-grabbing">
-                                            {META[t].label}<Plus size={12} className="opacity-40" />
+                                            {META[t].label}<Glyph ch="+" size={12} className="opacity-40" />
                                         </button>
                                     ))}
                                 </div>
@@ -878,7 +883,7 @@ export default function WhatsAppFlowBuilder() {
                                 onDrop={(e) => { e.preventDefault(); if (dragType) addComponent(dragType); setDragType(null); }}
                                 className="flex h-[520px] flex-col bg-white">
                                 <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2.5">
-                                    <X size={17} className="text-gray-500" />
+                                    <Glyph ch="×" size={17} className="text-gray-500" />
                                     <span className="text-[14px] font-semibold text-gray-900">{screen.title || "Untitled"}</span>
                                 </div>
                                 <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
@@ -894,9 +899,9 @@ export default function WhatsAppFlowBuilder() {
                                                 className={`group relative cursor-pointer rounded-lg px-1.5 py-1 ${isSel ? "ring-2 ring-emerald-400" : "hover:bg-gray-50"}`}>
                                                 <PreviewComponent c={c} />
                                                 <div className={`absolute -right-1 -top-2 z-10 flex items-center gap-0.5 rounded-md bg-white px-0.5 shadow ${isSel ? "flex" : "hidden group-hover:flex"}`}>
-                                                    <button onClick={(e) => { e.stopPropagation(); moveComponent(c.uid, -1); }} className="rounded p-0.5 text-gray-400 hover:text-gray-700" aria-label="Move up"><ChevronUp size={13} /></button>
-                                                    <button onClick={(e) => { e.stopPropagation(); moveComponent(c.uid, 1); }} className="rounded p-0.5 text-gray-400 hover:text-gray-700" aria-label="Move down"><ChevronDown size={13} /></button>
-                                                    <button onClick={(e) => { e.stopPropagation(); removeComponent(c.uid); }} className="rounded p-0.5 text-gray-400 hover:text-red-500" aria-label="Delete"><Trash2 size={12} /></button>
+                                                    <button onClick={(e) => { e.stopPropagation(); moveComponent(c.uid, -1); }} className="rounded p-0.5 text-gray-400 hover:text-gray-700" aria-label="Move up"><Glyph ch="▲" size={13} /></button>
+                                                    <button onClick={(e) => { e.stopPropagation(); moveComponent(c.uid, 1); }} className="rounded p-0.5 text-gray-400 hover:text-gray-700" aria-label="Move down"><Glyph ch="▼" size={13} /></button>
+                                                    <button onClick={(e) => { e.stopPropagation(); removeComponent(c.uid); }} className="rounded p-0.5 text-gray-400 hover:text-red-500" aria-label="Delete"><Glyph ch="🗑" size={12} /></button>
                                                 </div>
                                             </div>
                                         );
@@ -932,19 +937,19 @@ export default function WhatsAppFlowBuilder() {
                             {issues.length > 0 && (
                                 <span className="text-[11px] text-gray-400">{errors.length} error{errors.length !== 1 ? "s" : ""}, {warns.length} tip{warns.length !== 1 ? "s" : ""}</span>
                             )}
-                            <button onClick={() => setShowJson(false)} className="rounded p-0.5 text-gray-500 hover:text-gray-300"><PanelLeftClose size={14} /></button>
+                            <button onClick={() => setShowJson(false)} className="rounded p-0.5 text-gray-500 hover:text-gray-300"><Glyph ch="×" size={14} /></button>
                         </div>
                     </div>
                     <div className="grid min-h-0 flex-1 grid-cols-[1fr_240px] gap-0">
                         <pre className="overflow-auto px-4 py-2 text-[11px] leading-relaxed text-emerald-200">{json}</pre>
                         <div className="overflow-auto border-l border-gray-800 px-3 py-2">
                             {issues.length === 0 ? (
-                                <div className="flex items-center gap-1 text-[12px] text-emerald-400"><Check size={13} /> No issues</div>
+                                <div className="flex items-center gap-1 text-[12px] text-emerald-400"><Glyph ch="✓" size={13} /> No issues</div>
                             ) : (
                                 <ul className="space-y-1.5">
                                     {issues.map((it, i) => (
                                         <li key={i} className={`flex items-start gap-1.5 text-[11px] leading-snug ${it.level === "error" ? "text-red-300" : "text-amber-300"}`}>
-                                            <AlertTriangle size={12} className="mt-0.5 shrink-0" />{it.msg}
+                                            <Glyph ch="⚠" size={12} className="mt-0.5 shrink-0" />{it.msg}
                                         </li>
                                     ))}
                                 </ul>
